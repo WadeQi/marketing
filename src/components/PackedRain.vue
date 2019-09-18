@@ -5,6 +5,10 @@
       <div class="total">金币:{{total}}</div>
       <div class="packPrice" v-if="packPrice !== -1">+{{packPrice}}</div>
     </div>
+    <div class="start" v-if="startStatus">
+          <div @click="start()">开始</div>
+      </div>
+      <div class="endtime">倒计时:{{endtime}}</div>
   </div>
 </template>
 
@@ -15,6 +19,8 @@ export default {
   name: "PackedRain",
   data() {
     return {
+      startStatus:true,
+      endtime:5,
       wid: 320,
       hei: 568,
       packedArr: [
@@ -37,7 +43,7 @@ export default {
     this.initCanvas();
     // this.drawPacked()
     // this.movePacked()
-    this.start();
+    // this.start();
   },
   methods: {
     getPixelRatio(context) {
@@ -115,7 +121,7 @@ export default {
       for (let i = 0; i < random; i++) {
         const newPack = {
           x: Math.random() * (window.innerWidth - 100*this.ratio), 
-          y: 0- Math.random()*(100*this.ratio), 
+          y: -100*this.ratio - Math.random()*(100*this.ratio), 
           img: img, 
           price: parseInt(Math.random() * (10))
         };
@@ -123,11 +129,22 @@ export default {
         // console.log(arr)
       }
         this.packedArr = [...this.packedArr, ...arr]
-        setTimeout(() => {
+      this.time = setTimeout(() => {
+          this.endtime -- 
           this.pushPackArr();
+          console.log(this.speed)
+          if(this.endtime < 1){
+            window.clearTimeout(this.time)
+            this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            this.startStatus = true
+            this.total = 0
+            this.packPrice = -1
+            this.endtime = 10
+          }
         }, 1000);
     },
     start() {//执行动画
+      this.startStatus = false
       this.pushPackArr();
       this.movePacked();
     }
@@ -141,6 +158,37 @@ export default {
   background-color: #000;
   display: block
 }
+.start{
+        z-index: 20;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #FFD700;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        div{
+            border: 1px solid #000;
+            width: 200px;
+            height: 100px;
+            line-height: 100px;
+            font-size: 40px;
+        }
+    }
+.endtime{
+        position: fixed;
+        right: 0px;
+        top:50px;
+        background-color: #FFD700;
+        // width: 100px;
+        font-size: 30px;
+        line-height: 60px;
+        // height: 60px;
+        padding: 10px 20px;
+        border-radius: 50px 0 0 50px;
+        z-index: 10
+    }
 .numbers{
   position: fixed;
   left: 50px;

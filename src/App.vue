@@ -1,17 +1,14 @@
 <template>
   <div id="app">
-    <PackedRain/>
+    <!-- <PackedRain/> -->
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import PackedRain from './components/PackedRain'
 
 export default {
   name: 'App',
-  components: {
-    PackedRain
-  }
 }
 </script>
 
