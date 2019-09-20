@@ -18,13 +18,13 @@
               中奖纪录
           </div>
           <div class="win-list">
-              <ul class="win-list_box">
-                  <li class="win-list_item" v-for="(item,index) in 8">
+              <ul class="win-list_box" :style="{marginTop:top +'px'}">
+                  <li class="win-list_item" v-for="(item,index) in usersList">
                       <div class="item-left">
                           <img class="item-avatar" src="../../static/img/user.png" alt="">
                           <div class="item-left_right">
-                              <p class="item-left_right_phone">123999999</p>
-                              <p>2019/09/20</p>
+                              <p class="item-left_right_phone">{{item.phone}}</p>
+                              <p>{{item.date}}</p>
                           </div>
                       </div>
                       <div class="item-right">iphoneX</div>
@@ -38,20 +38,27 @@
               测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测测试测试测试测试测试测试测试测测试测试测试测试测试测试测试测试
           </div>
       </div>
+      <pop :isPop="isPop" :popObj="popObj" @clearPop="clearPop"/>
   </div>
 </template>
 
 <script>
+import Pop from './common/pop.vue'
 export default {
     name:'luckyDial',
+    components:{
+        Pop
+    },
     data(){
         return {
-            lottery:2,//次数
+            isPop:false,
+            top:0,//无缝滚动margin-top值
+            lottery:2,//抽奖次数
             target:95,//停止位置角度
             turnsNum:2,//转动多少圈
-            rotateAngle:1,//转动多少度
+            rotateAngle:0,//转动多少度
             qunHistory:0,//圈数记录
-            controlTime:1,//控制倒计时
+            speed:1,//控制倒计时
             index:1,//停止位置索引
             list:[
                 {img:"../../static/img/item_smile.png",text:'一等奖'},
@@ -62,19 +69,52 @@ export default {
                 {img:"../../static/img/item_smile.png",text:'一等奖'},
                 {img:"../../static/img/item_smile.png",text:'一等奖'},
                 {img:"../../static/img/item_smile.png",text:'一等奖'},
-            ]
+            ],
+            usersList:[
+                {phone:'123456234',date:'2019/11/22'},
+                {phone:'256987987',date:'2019/11/22'},
+                {phone:'359687292',date:'2019/11/22'},
+                {phone:'459867495',date:'2019/11/22'},
+                {phone:'523456234',date:'2019/11/22'},
+                {phone:'623456234',date:'2019/11/22'},
+                {phone:'723456234',date:'2019/11/22'},
+                {phone:'823456234',date:'2019/11/22'},
+                {phone:'923456234',date:'2019/11/22'},
+                {phone:'023456234',date:'2019/11/22'}
+            ],
+            itemH:'',
+            popObj:{
+                img:'',
+                text:'',
+            }
         }
     },
     mounted(){
-        console.log(this.pointScope())
+        this.itemH = document.querySelector('.win-list_item').offsetHeight
+        this.scroll()
+        // console.log(this.pointScope())
     },
     methods:{
+        clearPop(option){
+            this.isPop = option
+            console.log(option)
+        },
+        scroll(){//无缝滚动
+            if(this.itemH === Math.abs(this.top)){//单个item高度==matop值清0
+                this.top = 0
+                this.usersList.push(this.usersList[0])//超出元素放到尾部
+                this.usersList.shift()//移除第一个元素
+            }else{
+                this.top -= 1//top值--
+            }
+            this.scrollTime = setTimeout(this.scroll,5)
+        },
         activeDial(){
             // if()
             if(this.rotateAngle >=359){
                 this.rotateAngle = 0
                 this.qunHistory += 1
-                this.controlTime += 5
+                this.speed += 5
             }else{
                 this.rotateAngle += 5
             }
@@ -82,9 +122,14 @@ export default {
             if(this.qunHistory > this.turnsNum && this.target <= this.rotateAngle){
                 // console.log('aa')
                 console.log(this.pointScope())
+                this.isPop = true
+                let listItem = this.list[this.pointScope()]
+                this.popObj.img = listItem.img
+                this.popObj.text = listItem.text
+                this.speed = 1
                 clearTimeout(this.endTime)
             }else{
-                this.endTime = setTimeout(this.activeDial,this.controlTime)
+                this.endTime = setTimeout(this.activeDial,this.speed)
             }
             console.log(this.setRotate)
         },
@@ -111,9 +156,23 @@ export default {
             return index
         },
         start(){//开始转动
-            console.log('aaa')
+            if(this.speed>1){
+                return
+            }
+            this.rotateAngle = 0
+            this.qunHistory = 0
+            if(this.lottery>0){
+                this.lottery -= 1
+            }else{
+                // console.log('aaa')
+                this.isPop = true
+                this.popObj = {
+                    img:'',
+                    text:'暂无抽奖机会',
+                }
+                return
+            }
             this.activeDial()
-            
         }
     }
 }
