@@ -3,7 +3,7 @@
     <canvas id="canvas" :width="wid" :height="hei" @click="canvasHandle"></canvas>
     <div class="numbers">
       <div class="total">金币:{{total}}</div>
-      <div class="packPrice" v-show="packPrice !== -1">+{{packPrice}}</div>
+      <div class="packPrice" v-show="showPrice">+{{packPrice}}</div>
     </div>
     <div class="start" v-if="startStatus">
           <div @click="start()" v-if="endtime>0">开始</div>
@@ -20,6 +20,7 @@ export default {
   name: "PackedRain",
   data() {
     return {
+      showPrice:false,//单个红包金额显隐
       startStatus:true,
       endtime:15,
       wid: 320,
@@ -54,9 +55,11 @@ export default {
         return (window.devicePixelRatio || 1) / backingStore;
     },
 
-    canvasHandle(event){
+    canvasHandle(event){//点击canvas
       // console.log(event)
+      this.showPrice = true
        this.packPrice = -1
+      //  点击xy轴
       let x = event.clientX
       let y = event.clientY
       let arr = []
@@ -66,20 +69,22 @@ export default {
         let topY = y - item.y
         // console.log(leftX,topY)
         if(leftX>=0 && leftX <= 50*this.ratio && topY>=0 && topY<=50*this.ratio){
+          //轴向m = x || y: (点击m-元素m >=0 & 点击m-元素m <= 元素宽高) = 当前元素
           // console.log(item)
           this.total += item.price
-          this.packPrice = item.price
-          setTimeout(()=>{
-            this.packPrice =-1
+          this.packPrice = item.price//红包显示
+          setTimeout(()=>{//隐藏动画
+             this.showPrice = false
           },700)
           arr.push(index)
         }
       })
+      // 红包重叠删除最后一个
       if(arr.length > 0){
         this.packedArr.splice(arr[0],1)
       }
     },
-    initCanvas() {
+    initCanvas() {//初始化canvas
       const canvas = document.getElementById("canvas");
       // console.log(canvas);
       if (canvas.getContext) {
@@ -104,7 +109,7 @@ export default {
     },
     movePacked() {//执行动画帧
       this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      let arr = this.packedArr.filter((item,index)=>{
+      let arr = this.packedArr.filter((item,index)=>{//删除已超出窗口空包
         return item.y <= window.innerHeight
       })
       this.packedArr = arr
@@ -113,24 +118,25 @@ export default {
       window.requestAnimationFrame(this.movePacked);
     },
     pushPackArr() {//创建红包数据
+      //随机数量，一次掉了多少个
       const random = Math.floor(Math.random() * (this.density.max - this.density.min) + this.density.min);
       let arr = []
       // console.log(random)
       for (let i = 0; i < random; i++) {
         const newPack = {
           x: Math.random() * (window.innerWidth - 50*this.ratio), 
-          y: -100*this.ratio - Math.random()*(50*this.ratio), 
+          y: -100*this.ratio - Math.random()*(50*this.ratio), //避免过多重叠
           img: img, 
-          price: parseInt(Math.random() * (10))
+          price: parseInt(Math.random() * (10))//随机金额
         };
         arr.push(newPack);
         // console.log(arr)
       }
         this.packedArr = [...this.packedArr, ...arr]
-      this.time = setTimeout(() => {
+      this.time = setTimeout(() => {//间断插入红包数据
           this.endtime -- 
           this.pushPackArr();
-          console.log(this.speed)
+          // console.log(this.speed)
           if(this.endtime < 1){
             window.clearTimeout(this.time)
             this.startStatus = true
@@ -138,9 +144,9 @@ export default {
         }, 1000);
     },
     start() {//执行动画
-      this.startStatus = false
-      this.pushPackArr();
-      this.movePacked();
+      this.startStatus = false //隐藏开始结束遮罩层
+      this.pushPackArr();//红包数据插入
+      this.movePacked();//执行动画祯绘制红包图片
     }
   }
 };
@@ -197,16 +203,14 @@ export default {
     position: relative;
     margin-left: 20px;
     font-size: 35px;
-    animation: hidden 0.7s;
+    // animation: hidden 0.7s;
     color: #FFD700;
   }
 }
-@keyframes hidden {
-  0%{
-    opacity: 1
-  }
-  100%{
-    opacity: 0;
-  }
-}
+.v-enter,.v-leave-to{
+            opacity: 0; //透明度,0代表完全透明,1完全不透明
+        }
+        .v-enter-active,.v-leave-active{
+            transition: all 0.5s ease;  
+        }
 </style>

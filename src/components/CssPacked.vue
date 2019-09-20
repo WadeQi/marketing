@@ -7,7 +7,9 @@
       </ul>
       <div class="numbers">
         <div class="total">金币:{{total}}</div>
-        <div class="packPrice" v-show="packPrice !== -1">+{{packPrice}}</div>
+        <transition >
+            <div class="packPrice" v-show="showPrice">+{{packPrice}}</div>
+        </transition>
       </div>
       <div class="start" v-if="startStatus">
           <div @click="start()" v-if="endtime>0">开始</div>
@@ -22,8 +24,9 @@ export default {
     name:'CssPacked',
     data(){
         return {
+            showPrice:false,//数字显示隐藏
             startStatus:true,
-            endtime:15,
+            endtime:15,//倒计时
             packs:[
                 {price:1},
             ],
@@ -36,10 +39,11 @@ export default {
         }
     },
     mounted(){
-        // this.start()
+        this.filterPacks()
     },
     methods:{
-        pushPacks(){
+        pushPacks(){//push红包数据
+            //红包随机数量
             let random = Math.floor(Math.random() * (this.density.max - this.density.min) + this.density.min);
             let arr = []
             // console.log(parseInt(Math.random() * (window.innerWidth - 200)+0))
@@ -47,36 +51,44 @@ export default {
                 // console.log('aa')
                  const newPack = {
                     img:'../../static/img/redpacket2.png',
-                    price:parseInt(Math.random()*(10-1)+1),
-                    left:parseInt(Math.random() * (window.innerWidth - 200)+0) + 'px'
+                    price:parseInt(Math.random()*(10-1)+1),//随机金额区间
+                    left:parseInt(Math.random() * (window.innerWidth - 200)+0) + 'px'//距离左边距离减去红包宽度避免超出
                 }
                 arr.push(newPack)
              }
             //  console.log(arr)
                 this.packs = [...this.packs,...arr]
-             this.time = setTimeout(()=>{
+             this.time = setTimeout(()=>{//不断push红包数据
                     this.endtime --
                     this.pushPacks()
-                    console.log(this.endtime)
+                    // console.log(this.endtime)
                     if(this.endtime < 1){
                         window.clearTimeout(this.time)
                         // this.endtime = 10
                         this.startStatus = true
-                    }
+                    } 
                 },1000)
         },
-        removePack(e,item){
+        filterPacks(){
+            let li = document.querySelector('li')
+            console.log(li.scrollTop)
+            // let arr = this.packes.filter((item,index)=>{//删除已超出窗口空包
+            //     return item.y <= window.innerHeight
+            // })
+            // this.packedArr = arr
+        },
+        removePack(e,item){//红包点击清除
             console.log(e,item)
-            this.packPrice = -1
+            this.showPrice = true
             this.total += item.price
             this.packPrice = item.price
             setTimeout(()=>{
-                this.packPrice = -1
-            },700)
+                this.showPrice = false
+            },500)
             let target = e.currentTarget;
             document.querySelector('ul').removeChild(target)
         },
-        start(){
+        start(){//开始动画
             this.startStatus = false
             this.pushPacks()
         }
@@ -159,7 +171,7 @@ export default {
     position: relative;
     margin-left: 20px;
     font-size: 35px;
-    animation: hidden 0.7s;
+    // animation: hidden 0.7s;
     color: #FFD700;
   }
 }
@@ -171,4 +183,10 @@ export default {
     opacity: 0;
   }
 }
+.v-enter,.v-leave-to{
+            opacity: 0; //透明度,0代表完全透明,1完全不透明
+        }
+        .v-enter-active,.v-leave-active{
+            transition: all 0.5s ease;  
+        }
 </style>
